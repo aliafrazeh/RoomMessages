@@ -1,0 +1,134 @@
+{%load static%}
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font/dist/font-face.css" rel="stylesheet" type="text/css" />
+<title>Chat Room {{room}}</title>
+<script   src="{%static 'jquery/jquery-3.1.1.min.js'%}"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
+<link rel="stylesheet" href="{%static 'chat/messages.css'%}">
+</head>
+<body>
+
+<h2 style="color: #ffffff;">{{room}} - Chat</h2>
+
+<div id="display">
+  
+
+</div>
+
+
+
+<div class="container">
+    <style>
+      body{
+        background-image: url("{%static 'registration/images/bg-01.jpg'%}");
+        
+ 
+
+  
+
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+      }
+    input[type=text], select {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    }
+
+    input[type=submit] {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    input[type=submit]:hover {
+    background-color: #45a049;
+    }
+
+    div {
+    border-radius: 5px;
+    background-color: #ffffff;
+    padding: 20px;
+   
+    }
+    </style>
+
+    <form id="post-form">
+        {% csrf_token %}
+        <input type="hidden" name="room_id" id="room_id" value="{{room_detail.id}}"/>
+        <input type="text" name="message-value" id="message-value" width="100px" placeholder="پیام" class="myfont" />
+        <input type="submit" value="ارسال" class="myfont">
+    </form>
+</div>
+<script>
+  $(document).ready(function(){
+  
+  setInterval(function(){
+      $.ajax({
+          type: 'GET',
+          url : "/getMessages/{{room}}/",
+          success: function(response){
+              // console.log(response);
+              $("#display").empty();
+              for (var key in response.messages)
+              {
+                  var temp="<div class='container darker'><b>"+`
+                    
+                    <img src="${response.messages[key].picture_user}" alt="" class="right" style="width:100%;">
+                  
+                    `+response.messages[key].user+"</b><p>"+response.messages[key].value+"</p><span class='time-left'>"+response.messages[key].date+"</span></div>"+`
+                  <form action="{%url 'delete'%}" method="POST">
+                    {%csrf_token%}
+                    
+                    <input type="hidden" name="message" id="message" value="${response.messages[key].id}"/>
+                    <input type="hidden" name="room_id" id="room_id" value="${response.messages[key].room}"/>
+                    <input type="hidden" name="room_name" id="room_name" value="${response.messages[key].room_name}"/>
+
+                    
+                    <button type="submit" class="myfont btn">حذف</button>
+  
+                  </form>
+                  `;
+                  $("#display").append(temp);
+              }
+          },
+          error: function(response){
+              alert('An error occured')
+          }
+      });
+  },600);
+  })
+  
+  $(document).on('submit','#post-form',function(e){
+    e.preventDefault();
+
+    $.ajax({
+      type:'POST',
+      url:'/send',
+      data:{
+          room_id:$('#room_id').val(),
+          message:$('#message-value').val(),
+        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+      },
+      success: function(data){
+        //  alert(data)
+      }
+    });
+    document.getElementById('message').value = ''
+  });
+</script> 
+</body>
+</html>
